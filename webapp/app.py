@@ -1,28 +1,28 @@
 import streamlit as st
-import sys
-import os
+import matplotlib.pyplot as plt
+from utils.model_utils import run_model, tokenizer
+from utils.viz_utils import plot_attention_heatmap, plot_token_probabilities
+import io
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+st.title("Model Interpretability Dashboard")
 
-from utils.model_utils import load_model_and_tokenizer, get_model_outputs
-from utils.viz_utils import plot_attention_heatmap, plot_hidden_state_pca
+text = st.text_input("Enter text:", "The quick brown fox jumps over the lazy dog.")
 
-st.title("Model Interpretability Explorer")
+if st.button("Run Model"):
+    inputs, outputs = run_model(text)
+    tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
 
-model_name = st.text_input("Enter model name:", "gpt2")
-text_input = st.text_area("Enter text to analyze:", "Hello, world!")
+    layer = st.slider("Layer", 0, len(outputs.attentions)-1, 0)
+    head = st.slider("Head", 0, outputs.attentions[layer].shape[1]-1, 0)
 
-if st.button("Analyze"):
-    model, tokenizer = load_model_and_tokenizer(model_name)
-    inputs = tokenizer(text_input, return_tensors="pt")
-    outputs = get_model_outputs(model, inputs["input_ids"])
-    
-    st.subheader("Attention Visualization")
-    layer_idx = st.slider("Layer", 0, model.config.num_hidden_layers-1, 0)
-    head_idx = st.slider("Head", 0, model.config.num_attention_heads-1, 0)
-    
-    attention = outputs.attentions[layer_idx][0, head_idx].detach().numpy()
-    tokens = tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
-    
-    fig = plot_attention_heatmap(attention, tokens, layer_idx, head_idx)
-    st.pyplot(fig) 
+    # Attention Visualization
+    fig_attn = io.BytesIO()
+    plt.figure()
+    plot_attention_heatmap(outputs.attentions[layer][0], tokens, layer=layer, head=head)
+    st.pyplot(plt.gcf())
+
+    # Token probabilities (if GPT-2)
+    fig_probs = io.BytesIO()
+    plt.figure()
+    plot_token_probabilities(outputs.logits, tokenizer)
+    st.pyplot(plt.gcf())
