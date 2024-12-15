@@ -1,23 +1,19 @@
-from typing import Dict, List
+# Utilities for registering hooks
+# Hooks allow extraction of intermediate layer outputs
 import torch
 
-class ModelHooks:
-    def __init__(self):
-        self.attention_maps = {}
-        self.hidden_states = {}
-        
-    def attention_hook(self, layer_idx):
-        def hook(module, input, output):
-            self.attention_maps[f'layer_{layer_idx}'] = output[0].detach()
-        return hook
-    
-    def hidden_state_hook(self, layer_idx):
-        def hook(module, input, output):
-            self.hidden_states[f'layer_{layer_idx}'] = output[0].detach()
-        return hook
-    
-    def register_hooks(self, model):
-        """Register hooks for attention and hidden states."""
-        for idx, layer in enumerate(model.transformer.h):
-            layer.attn.register_forward_hook(self.attention_hook(idx))
-            layer.register_forward_hook(self.hidden_state_hook(idx)) 
+def get_attention_hook(attentions_list):
+    def hook(module, input, output):
+        # output is (hidden_states, attn_weights)
+        # For a transformer block, often attention is in output.attentions or as a tuple
+        # Adjust as needed for your model's structure.
+        # If using a plain BERT model, attention is obtained from model outputs directly, 
+        # so this hook might not be necessary.
+        attentions_list.append(output)
+    return hook
+
+def get_hidden_hook(hiddens_list):
+    def hook(module, input, output):
+        # output: hidden states at this layer
+        hiddens_list.append(output)
+    return hook

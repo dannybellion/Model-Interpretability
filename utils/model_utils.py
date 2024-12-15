@@ -1,24 +1,15 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer, AutoModel
 
-def load_model_and_tokenizer(model_name: str):
-    """Load a model and tokenizer from HuggingFace."""
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    return model, tokenizer
+# Load a pretrained model and tokenizer
+MODEL_NAME = "bert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModel.from_pretrained(MODEL_NAME, output_attentions=True, output_hidden_states=True)
+model.eval()
 
-def get_model_outputs(model, input_ids, attention_mask=None):
-    """Run a forward pass and return the model outputs."""
+def run_model(text):
+    inputs = tokenizer(text, return_tensors='pt')
     with torch.no_grad():
-        outputs = model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            output_attentions=True,
-            output_hidden_states=True
-        )
-    return outputs
-
-def get_token_probabilities(logits, tokenizer):
-    """Convert logits to token probabilities."""
-    probs = torch.softmax(logits, dim=-1)
-    return probs 
+        outputs = model(**inputs)
+    # outputs: (last_hidden_state, pooler_output, attentions, hidden_states)
+    return inputs, outputs
