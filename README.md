@@ -61,15 +61,6 @@ plot_token_probabilities(logits, tokenizer)
 
 See the example notebook for complete usage examples.
 
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/username/model-interpretability-tools.git
-
-# Install dependencies
-pip install -r requirements.txt
-```
 
 ## Project Structure
 
@@ -83,11 +74,3 @@ pip install -r requirements.txt
 │   └── hooks.py         # Model hooks for extracting states
 └── webapp/            # Interactive visualization app
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
